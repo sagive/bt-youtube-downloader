@@ -87,6 +87,9 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
         return [], info
 
 
+# Application Version
+APP_VERSION = "v1.0.0"
+
 # Set appearance mode and color theme
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -311,7 +314,7 @@ class YouTubeDownloaderApp(ctk.CTk):
         super().__init__()
 
         # Window Setup
-        self.title("YouTube Downloader")
+        self.title(f"YouTube Downloader {APP_VERSION}")
         self.geometry("960x680")
         self.minsize(900, 600)
         self.configure(fg_color=("#F5F5F7", "#1A1A1A"))
@@ -411,7 +414,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         self.app_title_lbl = ctk.CTkLabel(
             titles_sub_frame,
-            text=self.t("app_title"),
+            text=f"{self.t('app_title')} {APP_VERSION}",
             font=("Arial", 16, "bold"),
             text_color=("#E50914", "#FF4444")
         )
@@ -1208,14 +1211,17 @@ class YouTubeDownloaderApp(ctk.CTk):
     # -------------------------------------------------------------------
     def _open_settings_dialog(self):
         dlg = ctk.CTkToplevel(self)
-        dlg.title(self.t("settings_title"))
-        dlg.geometry("380x320")
+        dlg.title(f"{self.t('settings_title')} - {APP_VERSION}")
+        dlg.geometry("380x360")
         dlg.resizable(False, False)
         dlg.transient(self)
         dlg.grab_set()
 
         title_lbl = ctk.CTkLabel(dlg, text=self.t("settings_title"), font=("Arial", 16, "bold"))
-        title_lbl.pack(pady=(15, 15))
+        title_lbl.pack(pady=(15, 5))
+
+        ver_lbl = ctk.CTkLabel(dlg, text=f"BT YouTube Downloader {APP_VERSION}", font=("Arial", 11), text_color=("#888888", "#777777"))
+        ver_lbl.pack(pady=(0, 10))
 
         lang_lbl = ctk.CTkLabel(dlg, text=self.t("language_label"), font=("Arial", 12, "bold"))
         lang_lbl.pack(anchor="w", padx=25, pady=(5, 2))
@@ -1265,9 +1271,10 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def _change_language(self, lang_code):
         self.current_lang = lang_code
+        self.title(f"{self.t('app_title')} {APP_VERSION}")
 
         # 1. Update Header
-        self.app_title_lbl.configure(text=self.t("app_title"))
+        self.app_title_lbl.configure(text=f"{self.t('app_title')} {APP_VERSION}")
         self.subtitle_lbl.configure(text=self.t("subtitle"))
         self.url_entry.configure(placeholder_text=self.t("url_placeholder"))
         self.paste_btn.configure(text=self.t("paste"))
