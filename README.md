@@ -8,6 +8,7 @@
 ![FFmpeg](https://img.shields.io/badge/Encoder-FFmpeg-green?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Release-v1.0.0-orange?style=for-the-badge)
+[![Download from SourceForge](https://img.shields.io/badge/Download-SourceForge-orange?style=for-the-badge&logo=sourceforge)](https://sourceforge.net/projects/bt-youtube-downloader/files/latest/download)
 
 <br/>
 
@@ -147,6 +148,11 @@ bt-youtube-downloader/
 
 Developed independently by **Sagive**, Senior Developer and Technical Specialist at [BrandTactics](https://brandtactics.co.il/). Created as an open-source productivity utility for content creators, video editors, and digital marketing teams.
 
-* **Website**: [BrandTactics](https://brandtactics.co.il/)
-* **GitHub Repository**: [bt-youtube-downloader](https://github.com/sagive/bt-youtube-downloader)
-* **License**: Open Source under the [MIT License](LICENSE)
+- **SourceForge Project**: [https://sourceforge.net/projects/bt-youtube-downloader/](https://sourceforge.net/projects/bt-youtube-downloader/)
+- **GitHub Repository**: [https://github.com/sagive/bt-youtube-downloader](https://github.com/sagive/bt-youtube-downloader)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
