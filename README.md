@@ -143,6 +143,10 @@ bt-youtube-downloader/
 
 ---
 
-## 📄 License
+## 👨‍💻 Author & Credits
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Developed independently by **Sagive**, Senior Developer and Technical Specialist at [BrandTactics](https://brandtactics.co.il/). Created as an open-source productivity utility for content creators, video editors, and digital marketing teams.
+
+* **Website**: [BrandTactics](https://brandtactics.co.il/)
+* **GitHub Repository**: [bt-youtube-downloader](https://github.com/sagive/bt-youtube-downloader)
+* **License**: Open Source under the [MIT License](LICENSE)
