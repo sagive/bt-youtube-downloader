@@ -319,6 +319,17 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.minsize(900, 600)
         self.configure(fg_color=("#F5F5F7", "#1A1A1A"))
 
+        # Window Icon
+        try:
+            icon_path = os.path.join(self._get_app_dir(), "assets", "icon.png")
+            if not os.path.exists(icon_path):
+                icon_path = os.path.join(self._get_app_dir(), "bt-youtube-downloader-icon-512.png")
+            if os.path.exists(icon_path):
+                self._app_icon_img = ImageTk.PhotoImage(Image.open(icon_path))
+                self.iconphoto(True, self._app_icon_img)
+        except Exception:
+            pass
+
         # Application State (Default: English)
         self.current_lang = "en"
         self.download_path = ctk.StringVar(value=os.path.expanduser("~/Downloads"))

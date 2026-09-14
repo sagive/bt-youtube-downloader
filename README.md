@@ -1,6 +1,8 @@
-# 🎬 BT YouTube Downloader
-
 <div align="center">
+
+<img src="assets/icon.png" alt="BT YouTube Downloader Logo" width="120" />
+
+# 🎬 BT YouTube Downloader
 
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
 ![CustomTkinter](https://img.shields.io/badge/GUI-CustomTkinter-blueviolet?style=for-the-badge)
@@ -126,10 +128,13 @@ The compiled standalone executable will be located in the `dist/` directory.
 ```
 bt-youtube-downloader/
 ├── assets/
-│   └── screenshot.png          # App preview screenshot
+│   ├── icon.png                # High-res application icon (512x512)
+│   ├── screenshot.png          # App preview screenshot
+│   └── bt-ytdownloader-v1000.png # Release banner / badge graphic
 ├── requirements.txt            # Python package dependencies
 ├── youtube_downloader.py       # Main application & GUI source code
 ├── YouTube Downloader.spec     # PyInstaller build specification
+├── LICENSE                     # MIT open-source license
 ├── .gitignore                  # Git ignore definitions
 └── README.md                   # Project documentation
 ```
