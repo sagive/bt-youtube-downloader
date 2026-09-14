@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = []
+datas = [('assets', 'assets'), ('app_icon.ico', '.')]
 binaries = []
 hiddenimports = ['yt_dlp', 'yt_dlp.extractor', 'customtkinter']
 tmp_ret = collect_all('yt_dlp')
@@ -44,4 +44,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='app_icon.ico',
 )
