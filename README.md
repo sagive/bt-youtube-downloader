@@ -11,6 +11,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Release-v1.0.0-orange?style=for-the-badge)
 [![Download from SourceForge](https://img.shields.io/badge/Download-SourceForge-orange?style=for-the-badge&logo=sourceforge)](https://sourceforge.net/projects/bt-youtube-downloader/files/latest/download)
+[![Available on itch.io](https://img.shields.io/badge/Available_on-itch.io-fa5c5c?style=for-the-badge&logo=itch.io)](https://sagive.itch.io/bt-youtube-downloader)
 
 <br/>
 
@@ -154,6 +155,7 @@ bt-youtube-downloader/
 Developed independently by **Sagive**, Senior Developer and Technical Specialist at [BrandTactics](https://brandtactics.co.il/). Created as an open-source productivity utility for content creators, video editors, and digital marketing teams.
 
 - **SourceForge Project**: [https://sourceforge.net/projects/bt-youtube-downloader/](https://sourceforge.net/projects/bt-youtube-downloader/)
+- **itch.io Project**: [https://sagive.itch.io/bt-youtube-downloader](https://sagive.itch.io/bt-youtube-downloader)
 - **GitHub Repository**: [https://github.com/sagive/bt-youtube-downloader](https://github.com/sagive/bt-youtube-downloader)
 
 ---
