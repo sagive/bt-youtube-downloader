@@ -25,6 +25,9 @@ wheels/
 *.egg
 *.manifest
 *.exe
+*.zip
+*.7z
+*.rar
 
 # PyInstaller
 # Keep .spec file if you want reproducible builds, ignore standalone binaries
