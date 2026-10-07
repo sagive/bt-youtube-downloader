@@ -3,11 +3,13 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = [('assets', 'assets'), ('app_icon.ico', '.')]
 binaries = []
-hiddenimports = ['yt_dlp', 'yt_dlp.extractor', 'customtkinter']
+hiddenimports = ['yt_dlp', 'yt_dlp.extractor', 'customtkinter', 'curl_cffi']
 tmp_ret = collect_all('yt_dlp')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ctk = collect_all('customtkinter')
 datas += tmp_ctk[0]; binaries += tmp_ctk[1]; hiddenimports += tmp_ctk[2]
+tmp_curl = collect_all('curl_cffi')
+datas += tmp_curl[0]; binaries += tmp_curl[1]; hiddenimports += tmp_curl[2]
 
 
 a = Analysis(
