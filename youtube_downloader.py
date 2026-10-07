@@ -91,7 +91,7 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
 
 
 # Application Version
-APP_VERSION = "v1.0.0"
+APP_VERSION = "v1.0.1"
 
 # Set appearance mode and color theme
 ctk.set_appearance_mode("Dark")
