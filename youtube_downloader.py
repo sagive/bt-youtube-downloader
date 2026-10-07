@@ -92,7 +92,8 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
 
 
 # Application Version
-APP_VERSION = "v1.0.3"
+# Application Version
+APP_VERSION = "v1.0.4"
 
 # Set appearance mode and color theme
 ctk.set_appearance_mode("Dark")
@@ -110,6 +111,7 @@ TRANSLATIONS = {
         "load": "🔍 Load",
         "settings": "⚙️",
         "tab_download": "Options",
+        "tab_subtitles": "Subtitles",
         "tab_advanced": "Advanced",
         "format_label": "Format Type:",
         "quality_label": "Quality / Resolution:",
@@ -123,6 +125,13 @@ TRANSLATIONS = {
         "sub_mode_both": "Both (Embed & File)",
         "sub_mode_embed": "Embed in Video",
         "sub_mode_file": "Separate File (.srt)",
+        "sub_size_lbl": "Font Size:",
+        "sub_size_small": "Small",
+        "sub_size_medium": "Medium (Normal)",
+        "sub_size_large": "Large",
+        "sub_pos_lbl": "Position / Margin:",
+        "sub_pos_normal": "Bottom (Standard)",
+        "sub_pos_lifted": "Lifted (Shorts / Reels)",
         "playlist": "Download Full Playlist (if URL is playlist)",
         "filename_tpl": "Filename Format:",
         "ffmpeg_status": "FFmpeg Engine:",
@@ -168,6 +177,7 @@ TRANSLATIONS = {
         "load": "🔍 טען",
         "settings": "⚙️",
         "tab_download": "אפשרויות",
+        "tab_subtitles": "כתוביות",
         "tab_advanced": "מתקדם",
         "format_label": "סוג פורמט:",
         "quality_label": "איכות / רזולוציה:",
@@ -181,6 +191,13 @@ TRANSLATIONS = {
         "sub_mode_both": "שניהם (הטמעה + קובץ)",
         "sub_mode_embed": "הטמעה בווידאו",
         "sub_mode_file": "קובץ נפרד (.srt)",
+        "sub_size_lbl": "גודל גופן:",
+        "sub_size_small": "קטן",
+        "sub_size_medium": "בינוני (רגיל)",
+        "sub_size_large": "גדול",
+        "sub_pos_lbl": "מיקום / מרווח:",
+        "sub_pos_normal": "תחתית (רגיל)",
+        "sub_pos_lifted": "מוגבה (מתאים ל-Shorts)",
         "playlist": "הורד פלייליסט מלא (אם הקישור הוא פלייליסט)",
         "filename_tpl": "תבנית שם קובץ:",
         "ffmpeg_status": "מנוע FFmpeg:",
@@ -226,6 +243,7 @@ TRANSLATIONS = {
         "load": "🔍 लोड करें",
         "settings": "⚙️",
         "tab_download": "विकल्प",
+        "tab_subtitles": "उपशीर्षक",
         "tab_advanced": "उन्नत",
         "format_label": "प्रारूप का प्रकार:",
         "quality_label": "गुणवत्ता / रिज़ॉल्यूशन:",
@@ -239,6 +257,13 @@ TRANSLATIONS = {
         "sub_mode_both": "दोनों (एम्बेड और फ़ाइल)",
         "sub_mode_embed": "वीडियो में एम्बेड करें",
         "sub_mode_file": "अलग फ़ाइल (.srt)",
+        "sub_size_lbl": "फ़ॉन्ट का आकार:",
+        "sub_size_small": "छोटा",
+        "sub_size_medium": "मध्यम (सामान्य)",
+        "sub_size_large": "बड़ा",
+        "sub_pos_lbl": "स्थिति / मार्जिन:",
+        "sub_pos_normal": "नीचे (सामान्य)",
+        "sub_pos_lifted": "ऊपर उठा हुआ (Shorts)",
         "playlist": "पूरी प्लेलिस्ट डाउनलोड करें (यदि यूआरएल प्लेलिस्ट है)",
         "filename_tpl": "फ़ाइल नाम प्रारूप:",
         "ffmpeg_status": "FFmpeg इंजन:",
@@ -284,6 +309,7 @@ TRANSLATIONS = {
         "load": "🔍 โหลด",
         "settings": "⚙️",
         "tab_download": "ตัวเลือก",
+        "tab_subtitles": "คำบรรยาย",
         "tab_advanced": "ขั้นสูง",
         "format_label": "ประเภทรูปแบบ:",
         "quality_label": "คุณภาพ / ความละเอียด:",
@@ -297,6 +323,13 @@ TRANSLATIONS = {
         "sub_mode_both": "ทั้งสองแบบ",
         "sub_mode_embed": "ฝังในวิดีโอ",
         "sub_mode_file": "ไฟล์แยก (.srt)",
+        "sub_size_lbl": "ขนาดตัวอักษร:",
+        "sub_size_small": "เล็ก",
+        "sub_size_medium": "ปานกลาง (ปกติ)",
+        "sub_size_large": "ใหญ่",
+        "sub_pos_lbl": "ตำแหน่ง / ขอบ:",
+        "sub_pos_normal": "ด้านล่าง (ปกติ)",
+        "sub_pos_lifted": "ยกสูง (Shorts/Reels)",
         "playlist": "ดาวน์โหลดทั้งเพลย์ลิสต์ (หากลิงก์เป็นเพลย์ลิสต์)",
         "filename_tpl": "รูปแบบชื่อไฟล์:",
         "ffmpeg_status": "เอนจิน FFmpeg:",
@@ -364,9 +397,11 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.url_var = ctk.StringVar()
         self.format_mode = ctk.StringVar(value="Video")
         self.quality_var = ctk.StringVar(value="Best")
-        self.subtitle_enabled = ctk.BooleanVar(value=True)
+        self.subtitle_enabled = ctk.BooleanVar(value=False)
         self.sub_lang_var = ctk.StringVar(value="All Available")
         self.sub_mode_var = ctk.StringVar(value=self.t("sub_mode_burn"))
+        self.sub_size_var = ctk.StringVar(value=self.t("sub_size_medium"))
+        self.sub_pos_var = ctk.StringVar(value=self.t("sub_pos_lifted"))
         self.playlist_enabled = ctk.BooleanVar(value=False)
         self.filename_tpl_var = ctk.StringVar(value="%(title)s.%(ext)s")
 
@@ -610,16 +645,17 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.options_tabview = ctk.CTkTabview(self.upper_split_frame, width=460, height=210, corner_radius=12)
         self.options_tabview.pack(side="right", fill="both")
 
-        # Fixed internal names for tabs: "tab1", "tab2"
+        # Fixed internal names for tabs: "tab1", "tab2", "tab3"
         self.tab_dl = self.options_tabview.add("tab1")
-        self.tab_adv = self.options_tabview.add("tab2")
+        self.tab_sub = self.options_tabview.add("tab2")
+        self.tab_adv = self.options_tabview.add("tab3")
 
         # Configure tab button texts dynamically
         self._update_tab_button_texts()
 
         # --- Tab 1: Download Options ---
         self.fmt_lbl = ctk.CTkLabel(self.tab_dl, text=self.t("format_label"), font=("Arial", 12, "bold"))
-        self.fmt_lbl.grid(row=0, column=0, sticky="w", pady=(5, 5))
+        self.fmt_lbl.grid(row=0, column=0, sticky="w", pady=(8, 5))
 
         self.fmt_seg_btn = ctk.CTkSegmentedButton(
             self.tab_dl,
@@ -627,7 +663,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             command=self._on_format_segment_change
         )
         self.fmt_seg_btn.set(self.t("video"))
-        self.fmt_seg_btn.grid(row=0, column=1, sticky="ew", pady=(5, 5), padx=(10, 0))
+        self.fmt_seg_btn.grid(row=0, column=1, sticky="ew", pady=(8, 5), padx=(10, 0))
 
         self.qual_lbl = ctk.CTkLabel(self.tab_dl, text=self.t("quality_label"), font=("Arial", 12, "bold"))
         self.qual_lbl.grid(row=1, column=0, sticky="w", pady=5)
@@ -668,18 +704,18 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         self.tab_dl.columnconfigure(1, weight=1)
 
-        # Subtitle Controls in Tab 1 (Main View)
-        sub_quick_row = ctk.CTkFrame(self.tab_dl, fg_color="transparent")
-        sub_quick_row.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(6, 2))
-
-        self.sub_chk_quick = ctk.CTkCheckBox(
-            sub_quick_row,
+        # --- Tab 2: Dedicated Subtitles Tab ---
+        self.sub_chk = ctk.CTkCheckBox(
+            self.tab_sub,
             text=self.t("subtitles"),
             variable=self.subtitle_enabled,
             font=("Arial", 11, "bold"),
             command=self._on_subtitle_toggle
         )
-        self.sub_chk_quick.pack(side="left")
+        self.sub_chk.grid(row=0, column=0, columnspan=2, sticky="w", pady=(2, 4))
+
+        self.sub_mode_lbl = ctk.CTkLabel(self.tab_sub, text=self.t("sub_mode"), font=("Arial", 11, "bold"))
+        self.sub_mode_lbl.grid(row=1, column=0, sticky="w", pady=2)
 
         sub_mode_choices = [
             self.t("sub_mode_burn"),
@@ -687,71 +723,73 @@ class YouTubeDownloaderApp(ctk.CTk):
             self.t("sub_mode_embed"),
             self.t("sub_mode_file"),
         ]
-
-        self.sub_mode_quick = ctk.CTkOptionMenu(
-            sub_quick_row,
+        self.sub_mode_menu = ctk.CTkOptionMenu(
+            self.tab_sub,
             variable=self.sub_mode_var,
             values=sub_mode_choices,
-            width=200,
-            height=28
-        )
-        self.sub_mode_quick.pack(side="right")
-
-        # Row 5: Quick Subtitle Language Selector in Tab 1
-        sub_lang_row = ctk.CTkFrame(self.tab_dl, fg_color="transparent")
-        sub_lang_row.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(2, 4))
-
-        self.sub_lang_lbl_quick = ctk.CTkLabel(sub_lang_row, text=self.t("sub_lang"), font=("Arial", 11, "bold"))
-        self.sub_lang_lbl_quick.pack(side="left")
-
-        self.sub_lang_quick = ctk.CTkOptionMenu(
-            sub_lang_row,
-            variable=self.sub_lang_var,
-            values=["All Available", "Auto / Original", "Hebrew", "English", "Arabic"],
-            width=200,
             height=26
         )
-        self.sub_lang_quick.pack(side="right")
+        self.sub_mode_menu.grid(row=1, column=1, sticky="ew", pady=2, padx=(10, 0))
 
-        # --- Tab 2: Advanced Settings ---
-        self.sub_chk = ctk.CTkCheckBox(
-            self.tab_adv,
-            text=self.t("subtitles"),
-            variable=self.subtitle_enabled,
-            command=self._on_subtitle_toggle
-        )
-        self.sub_chk.grid(row=0, column=0, sticky="w", pady=5)
+        self.sub_lang_lbl = ctk.CTkLabel(self.tab_sub, text=self.t("sub_lang"), font=("Arial", 11, "bold"))
+        self.sub_lang_lbl.grid(row=2, column=0, sticky="w", pady=2)
 
         self.sub_lang_menu = ctk.CTkOptionMenu(
-            self.tab_adv,
+            self.tab_sub,
             variable=self.sub_lang_var,
             values=["All Available", "Auto / Original", "Hebrew", "English", "Arabic"],
-            width=180
+            height=26
         )
-        self.sub_lang_menu.grid(row=0, column=1, sticky="e", pady=5, padx=(10, 0))
+        self.sub_lang_menu.grid(row=2, column=1, sticky="ew", pady=2, padx=(10, 0))
 
-        self.sub_mode_lbl = ctk.CTkLabel(self.tab_adv, text=self.t("sub_mode"), font=("Arial", 11, "bold"))
-        self.sub_mode_lbl.grid(row=1, column=0, sticky="w", pady=5)
+        self.sub_size_lbl = ctk.CTkLabel(self.tab_sub, text=self.t("sub_size_lbl"), font=("Arial", 11, "bold"))
+        self.sub_size_lbl.grid(row=3, column=0, sticky="w", pady=2)
 
-        self.sub_mode_menu = ctk.CTkOptionMenu(
-            self.tab_adv,
-            variable=self.sub_mode_var,
-            values=sub_mode_choices,
-            width=180
+        sub_size_choices = [
+            self.t("sub_size_small"),
+            self.t("sub_size_medium"),
+            self.t("sub_size_large"),
+        ]
+        self.sub_size_menu = ctk.CTkOptionMenu(
+            self.tab_sub,
+            variable=self.sub_size_var,
+            values=sub_size_choices,
+            height=26
         )
-        self.sub_mode_menu.grid(row=1, column=1, sticky="e", pady=5, padx=(10, 0))
+        self.sub_size_menu.grid(row=3, column=1, sticky="ew", pady=2, padx=(10, 0))
 
+        self.sub_pos_lbl = ctk.CTkLabel(self.tab_sub, text=self.t("sub_pos_lbl"), font=("Arial", 11, "bold"))
+        self.sub_pos_lbl.grid(row=4, column=0, sticky="w", pady=2)
+
+        sub_pos_choices = [
+            self.t("sub_pos_lifted"),
+            self.t("sub_pos_normal"),
+        ]
+        self.sub_pos_menu = ctk.CTkOptionMenu(
+            self.tab_sub,
+            variable=self.sub_pos_var,
+            values=sub_pos_choices,
+            height=26
+        )
+        self.sub_pos_menu.grid(row=4, column=1, sticky="ew", pady=2, padx=(10, 0))
+
+        self.tab_sub.columnconfigure(1, weight=1)
+
+        # Apply initial toggle state (disabled by default)
+        self._on_subtitle_toggle()
+
+        # --- Tab 3: Advanced Settings ---
         self.playlist_chk = ctk.CTkCheckBox(self.tab_adv, text=self.t("playlist"), variable=self.playlist_enabled)
-        self.playlist_chk.grid(row=2, column=0, columnspan=2, sticky="w", pady=5)
+        self.playlist_chk.grid(row=0, column=0, columnspan=2, sticky="w", pady=(8, 6))
 
         self.fn_lbl = ctk.CTkLabel(self.tab_adv, text=self.t("filename_tpl"), font=("Arial", 11, "bold"))
-        self.fn_lbl.grid(row=3, column=0, sticky="w", pady=5)
+        self.fn_lbl.grid(row=1, column=0, sticky="w", pady=5)
 
         self.fn_entry = ctk.CTkEntry(self.tab_adv, textvariable=self.filename_tpl_var, height=28, font=("Arial", 11))
-        self.fn_entry.grid(row=3, column=1, sticky="ew", pady=5, padx=(10, 0))
+        self.fn_entry.grid(row=1, column=1, sticky="ew", pady=5, padx=(10, 0))
 
         self.ffmpeg_lbl = ctk.CTkLabel(self.tab_adv, text="", font=("Arial", 10), wraplength=340, justify="left")
-        self.ffmpeg_lbl.grid(row=4, column=0, columnspan=2, sticky="w", pady=(8, 2))
+        self.ffmpeg_lbl.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 2))
 
         self.ffmpeg_install_btn = ctk.CTkButton(
             self.tab_adv,
@@ -861,7 +899,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def _on_subtitle_toggle(self):
         state = "normal" if self.subtitle_enabled.get() else "disabled"
-        for widget_name in ["sub_lang_menu", "sub_mode_menu", "sub_mode_quick", "sub_lang_quick"]:
+        for widget_name in ["sub_mode_menu", "sub_lang_menu", "sub_size_menu", "sub_pos_menu"]:
             if hasattr(self, widget_name):
                 getattr(self, widget_name).configure(state=state)
 
@@ -871,7 +909,9 @@ class YouTubeDownloaderApp(ctk.CTk):
             if "tab1" in btns:
                 btns["tab1"].configure(text=self.t("tab_download"))
             if "tab2" in btns:
-                btns["tab2"].configure(text=self.t("tab_advanced"))
+                btns["tab2"].configure(text=self.t("tab_subtitles"))
+            if "tab3" in btns:
+                btns["tab3"].configure(text=self.t("tab_advanced"))
         except Exception:
             pass
 
@@ -1075,16 +1115,12 @@ class YouTubeDownloaderApp(ctk.CTk):
         if safe_subs:
             sub_choices = ["All Available"] + sorted(safe_subs.keys())
             self.sub_lang_menu.configure(values=sub_choices)
-            if hasattr(self, "sub_lang_quick"):
-                self.sub_lang_quick.configure(values=sub_choices)
             # Default to primary native audio language (e.g. ar-orig) or All Available
             orig_choice = next((k for k in safe_subs.keys() if "-orig" in k), "All Available")
             self.sub_lang_var.set(orig_choice)
         else:
             fallback = ["All Available", "Hebrew", "English", "Arabic"]
             self.sub_lang_menu.configure(values=fallback)
-            if hasattr(self, "sub_lang_quick"):
-                self.sub_lang_quick.configure(values=fallback)
 
         self._update_estimated_size()
 
@@ -1342,7 +1378,24 @@ class YouTubeDownloaderApp(ctk.CTk):
                             temp_burned_path = os.path.join(out_dir, temp_burned_name)
                             try:
                                 shutil.copy2(chosen_srt, temp_sub_path)
-                                vf = f"subtitles={temp_sub_name}:force_style='FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,MarginV=30'"
+
+                                # Subtitle Font Size (13 for small, 16 for medium, 20 for large)
+                                size_choice = self.sub_size_var.get()
+                                if any(kw in size_choice for kw in ["Small", "קטן", "छोटा", "เล็ก"]):
+                                    f_size = 13
+                                elif any(kw in size_choice for kw in ["Large", "גדול", "बड़ा", "ใหญ่"]):
+                                    f_size = 20
+                                else:
+                                    f_size = 16
+
+                                # Subtitle Position / Margin (50 for lifted Shorts/Reels, 25 for bottom standard)
+                                pos_choice = self.sub_pos_var.get()
+                                if any(kw in pos_choice for kw in ["Bottom", "Standard", "תחתית", "רגיל", "नीचे", "ด้านล่าง"]):
+                                    margin_v = 25
+                                else:
+                                    margin_v = 50
+
+                                vf = f"subtitles={temp_sub_name}:force_style='FontSize={f_size},PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,MarginV={margin_v}'"
                                 burn_cmd = [
                                     "ffmpeg", "-y",
                                     "-i", os.path.basename(video_file),
@@ -1559,25 +1612,19 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.qual_lbl.configure(text=self.t("quality_label"))
         self.path_lbl.configure(text=self.t("save_to"))
         self.browse_btn.configure(text=self.t("browse"))
+        self._update_estimated_size()
+
+        # 4. Update Options Tab 2 (Subtitles) Labels & Menus
+        self.sub_chk.configure(text=self.t("subtitles"))
+        self.sub_mode_lbl.configure(text=self.t("sub_mode"))
         new_sub_modes = [
             self.t("sub_mode_burn"),
             self.t("sub_mode_both"),
             self.t("sub_mode_embed"),
             self.t("sub_mode_file"),
         ]
-        if hasattr(self, "sub_chk_quick"):
-            self.sub_chk_quick.configure(text=self.t("subtitles"))
-        if hasattr(self, "sub_mode_quick"):
-            self.sub_mode_quick.configure(values=new_sub_modes)
-        if hasattr(self, "sub_lang_lbl_quick"):
-            self.sub_lang_lbl_quick.configure(text=self.t("sub_lang"))
-        self._update_estimated_size()
-
-        # 4. Update Options Tab 2 Labels
-        self.sub_chk.configure(text=self.t("subtitles"))
-        self.sub_mode_lbl.configure(text=self.t("sub_mode"))
-        current_mode = self.sub_mode_var.get()
         self.sub_mode_menu.configure(values=new_sub_modes)
+        current_mode = self.sub_mode_var.get()
         if any(kw in current_mode for kw in ["Burn", "צריבה", "बर्न", "ถาวร"]):
             self.sub_mode_var.set(self.t("sub_mode_burn"))
         elif any(kw in current_mode for kw in ["Both", "שניהם", "दोनों", "ทั้งสอง"]):
@@ -1586,6 +1633,30 @@ class YouTubeDownloaderApp(ctk.CTk):
             self.sub_mode_var.set(self.t("sub_mode_file"))
         else:
             self.sub_mode_var.set(self.t("sub_mode_embed"))
+
+        self.sub_lang_lbl.configure(text=self.t("sub_lang"))
+
+        self.sub_size_lbl.configure(text=self.t("sub_size_lbl"))
+        new_sizes = [self.t("sub_size_small"), self.t("sub_size_medium"), self.t("sub_size_large")]
+        self.sub_size_menu.configure(values=new_sizes)
+        current_size = self.sub_size_var.get()
+        if any(kw in current_size for kw in ["Small", "קטן", "छोटा", "เล็ก"]):
+            self.sub_size_var.set(self.t("sub_size_small"))
+        elif any(kw in current_size for kw in ["Large", "גדול", "बड़ा", "ใหญ่"]):
+            self.sub_size_var.set(self.t("sub_size_large"))
+        else:
+            self.sub_size_var.set(self.t("sub_size_medium"))
+
+        self.sub_pos_lbl.configure(text=self.t("sub_pos_lbl"))
+        new_positions = [self.t("sub_pos_lifted"), self.t("sub_pos_normal")]
+        self.sub_pos_menu.configure(values=new_positions)
+        current_pos = self.sub_pos_var.get()
+        if any(kw in current_pos for kw in ["Bottom", "Standard", "תחתית", "רגיל", "नीचे", "ด้านล่าง"]):
+            self.sub_pos_var.set(self.t("sub_pos_normal"))
+        else:
+            self.sub_pos_var.set(self.t("sub_pos_lifted"))
+
+        # 5. Update Options Tab 3 (Advanced) Labels
         self.playlist_chk.configure(text=self.t("playlist"))
         self.fn_lbl.configure(text=self.t("filename_tpl"))
         self.ffmpeg_install_btn.configure(text=self.t("ffmpeg_install_btn"))
