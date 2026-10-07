@@ -1395,11 +1395,12 @@ class YouTubeDownloaderApp(ctk.CTk):
                                 else:
                                     margin_v = 50
 
-                                vf = f"subtitles={temp_sub_name}:force_style='FontSize={f_size},PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,MarginV={margin_v}'"
+                                vf = f"subtitles={temp_sub_name}:force_style='FontSize={f_size},PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,Alignment=2,MarginV={margin_v}'"
                                 burn_cmd = [
                                     "ffmpeg", "-y",
                                     "-i", os.path.basename(video_file),
                                     "-vf", vf,
+                                    "-sn",
                                     "-c:v", "libx264",
                                     "-crf", "18",
                                     "-preset", "fast",
@@ -1413,6 +1414,15 @@ class YouTubeDownloaderApp(ctk.CTk):
                                         try: os.remove(video_file)
                                         except Exception: pass
                                     os.replace(temp_burned_path, target_mp4)
+
+                                    # Clean up loose .srt files in out_dir so players (VLC / Media Player) don't display a duplicate soft subtitle
+                                    if is_burn and not is_both:
+                                        for file_in_dir in os.listdir(out_dir):
+                                            if file_in_dir.startswith(os.path.basename(base_no_ext)) and file_in_dir.endswith(".srt"):
+                                                try:
+                                                    os.remove(os.path.join(out_dir, file_in_dir))
+                                                except Exception:
+                                                    pass
                             finally:
                                 if os.path.exists(temp_sub_path):
                                     try: os.remove(temp_sub_path)
