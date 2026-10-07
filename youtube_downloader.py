@@ -6,6 +6,7 @@ Custom Tabbed Options, Download Queue, and FFmpeg integration.
 
 import os
 import sys
+import subprocess
 import re
 import json
 import shutil
@@ -91,7 +92,7 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
 
 
 # Application Version
-APP_VERSION = "v1.0.2"
+APP_VERSION = "v1.0.3"
 
 # Set appearance mode and color theme
 ctk.set_appearance_mode("Dark")
@@ -118,9 +119,10 @@ TRANSLATIONS = {
         "subtitles": "Download Video Subtitles",
         "sub_lang": "Subtitle Language:",
         "sub_mode": "Subtitle Mode:",
+        "sub_mode_burn": "Burn into Video (Hardsub)",
+        "sub_mode_both": "Both (Embed & File)",
         "sub_mode_embed": "Embed in Video",
         "sub_mode_file": "Separate File (.srt)",
-        "sub_mode_both": "Both (Embed & File)",
         "playlist": "Download Full Playlist (if URL is playlist)",
         "filename_tpl": "Filename Format:",
         "ffmpeg_status": "FFmpeg Engine:",
@@ -139,6 +141,7 @@ TRANSLATIONS = {
         "status_ready": "Ready",
         "status_fetching": "Fetching metadata...",
         "status_downloading": "Downloading video...",
+        "status_burning": "Burning subtitles into video...",
         "status_completed": "Completed!",
         "status_error": "Error",
         "status_cancelled": "Cancelled",
@@ -174,9 +177,10 @@ TRANSLATIONS = {
         "subtitles": "הורד כתוביות לסרטון",
         "sub_lang": "שפת כתוביות:",
         "sub_mode": "מצב כתוביות:",
+        "sub_mode_burn": "צריבה לווידאו (Hardsub - נראה תמיד)",
+        "sub_mode_both": "שניהם (הטמעה + קובץ)",
         "sub_mode_embed": "הטמעה בווידאו",
         "sub_mode_file": "קובץ נפרד (.srt)",
-        "sub_mode_both": "שניהם (הטמעה + קובץ)",
         "playlist": "הורד פלייליסט מלא (אם הקישור הוא פלייליסט)",
         "filename_tpl": "תבנית שם קובץ:",
         "ffmpeg_status": "מנוע FFmpeg:",
@@ -195,6 +199,7 @@ TRANSLATIONS = {
         "status_ready": "מוכן",
         "status_fetching": "מאחזר פרטי סרטון...",
         "status_downloading": "מוריד...",
+        "status_burning": "צורב כתוביות לתוך הווידאו...",
         "status_completed": "הושלם!",
         "status_error": "שגיאה",
         "status_cancelled": "בוטל",
@@ -230,9 +235,10 @@ TRANSLATIONS = {
         "subtitles": "वीडियो उपशीर्षक डाउनलोड करें",
         "sub_lang": "उपशीर्षक भाषा:",
         "sub_mode": "उपशीर्षक मोड:",
+        "sub_mode_burn": "वीडियो में बर्न करें (Hardsub)",
+        "sub_mode_both": "दोनों (एम्बेड और फ़ाइल)",
         "sub_mode_embed": "वीडियो में एम्बेड करें",
         "sub_mode_file": "अलग फ़ाइल (.srt)",
-        "sub_mode_both": "दोनों (एम्बेड और फ़ाइल)",
         "playlist": "पूरी प्लेलिस्ट डाउनलोड करें (यदि यूआरएल प्लेलिस्ट है)",
         "filename_tpl": "फ़ाइल नाम प्रारूप:",
         "ffmpeg_status": "FFmpeg इंजन:",
@@ -251,6 +257,7 @@ TRANSLATIONS = {
         "status_ready": "तैयार",
         "status_fetching": "जानकारी प्राप्त की जा रही है...",
         "status_downloading": "डाउनलोड हो रहा है...",
+        "status_burning": "उपशीर्षक वीडियो में बर्न हो रहे हैं...",
         "status_completed": "पूरा हुआ!",
         "status_error": "त्रुटि",
         "status_cancelled": "रद्द किया गया",
@@ -286,9 +293,10 @@ TRANSLATIONS = {
         "subtitles": "ดาวน์โหลดคำบรรยายวิดีโอ",
         "sub_lang": "ภาษาคำบรรยาย:",
         "sub_mode": "โหมดคำบรรยาย:",
+        "sub_mode_burn": "ฝังลงในวิดีโอถาวร (Hardsub)",
+        "sub_mode_both": "ทั้งสองแบบ",
         "sub_mode_embed": "ฝังในวิดีโอ",
         "sub_mode_file": "ไฟล์แยก (.srt)",
-        "sub_mode_both": "ทั้งสองแบบ",
         "playlist": "ดาวน์โหลดทั้งเพลย์ลิสต์ (หากลิงก์เป็นเพลย์ลิสต์)",
         "filename_tpl": "รูปแบบชื่อไฟล์:",
         "ffmpeg_status": "เอนจิน FFmpeg:",
@@ -307,6 +315,7 @@ TRANSLATIONS = {
         "status_ready": "พร้อม",
         "status_fetching": "กำลังดึงข้อมูล...",
         "status_downloading": "กำลังดาวน์โหลด...",
+        "status_burning": "กำลังเบิร์นคำบรรยายลงในวิดีโอ...",
         "status_completed": "เสร็จสมบูรณ์!",
         "status_error": "ข้อผิดพลาด",
         "status_cancelled": "ยกเลิกแล้ว",
@@ -357,7 +366,7 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.quality_var = ctk.StringVar(value="Best")
         self.subtitle_enabled = ctk.BooleanVar(value=True)
         self.sub_lang_var = ctk.StringVar(value="All Available")
-        self.sub_mode_var = ctk.StringVar(value=self.t("sub_mode_both"))
+        self.sub_mode_var = ctk.StringVar(value=self.t("sub_mode_burn"))
         self.playlist_enabled = ctk.BooleanVar(value=False)
         self.filename_tpl_var = ctk.StringVar(value="%(title)s.%(ext)s")
 
@@ -659,9 +668,9 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         self.tab_dl.columnconfigure(1, weight=1)
 
-        # Quick subtitle control in Tab 1
+        # Subtitle Controls in Tab 1 (Main View)
         sub_quick_row = ctk.CTkFrame(self.tab_dl, fg_color="transparent")
-        sub_quick_row.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(8, 2))
+        sub_quick_row.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(6, 2))
 
         self.sub_chk_quick = ctk.CTkCheckBox(
             sub_quick_row,
@@ -672,14 +681,37 @@ class YouTubeDownloaderApp(ctk.CTk):
         )
         self.sub_chk_quick.pack(side="left")
 
+        sub_mode_choices = [
+            self.t("sub_mode_burn"),
+            self.t("sub_mode_both"),
+            self.t("sub_mode_embed"),
+            self.t("sub_mode_file"),
+        ]
+
         self.sub_mode_quick = ctk.CTkOptionMenu(
             sub_quick_row,
             variable=self.sub_mode_var,
-            values=[self.t("sub_mode_both"), self.t("sub_mode_embed"), self.t("sub_mode_file")],
-            width=165,
+            values=sub_mode_choices,
+            width=200,
             height=28
         )
         self.sub_mode_quick.pack(side="right")
+
+        # Row 5: Quick Subtitle Language Selector in Tab 1
+        sub_lang_row = ctk.CTkFrame(self.tab_dl, fg_color="transparent")
+        sub_lang_row.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(2, 4))
+
+        self.sub_lang_lbl_quick = ctk.CTkLabel(sub_lang_row, text=self.t("sub_lang"), font=("Arial", 11, "bold"))
+        self.sub_lang_lbl_quick.pack(side="left")
+
+        self.sub_lang_quick = ctk.CTkOptionMenu(
+            sub_lang_row,
+            variable=self.sub_lang_var,
+            values=["All Available", "Auto / Original", "Hebrew", "English", "Arabic"],
+            width=200,
+            height=26
+        )
+        self.sub_lang_quick.pack(side="right")
 
         # --- Tab 2: Advanced Settings ---
         self.sub_chk = ctk.CTkCheckBox(
@@ -694,7 +726,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             self.tab_adv,
             variable=self.sub_lang_var,
             values=["All Available", "Auto / Original", "Hebrew", "English", "Arabic"],
-            width=140
+            width=180
         )
         self.sub_lang_menu.grid(row=0, column=1, sticky="e", pady=5, padx=(10, 0))
 
@@ -704,8 +736,8 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.sub_mode_menu = ctk.CTkOptionMenu(
             self.tab_adv,
             variable=self.sub_mode_var,
-            values=[self.t("sub_mode_both"), self.t("sub_mode_embed"), self.t("sub_mode_file")],
-            width=160
+            values=sub_mode_choices,
+            width=180
         )
         self.sub_mode_menu.grid(row=1, column=1, sticky="e", pady=5, padx=(10, 0))
 
@@ -829,12 +861,9 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def _on_subtitle_toggle(self):
         state = "normal" if self.subtitle_enabled.get() else "disabled"
-        if hasattr(self, "sub_lang_menu"):
-            self.sub_lang_menu.configure(state=state)
-        if hasattr(self, "sub_mode_menu"):
-            self.sub_mode_menu.configure(state=state)
-        if hasattr(self, "sub_mode_quick"):
-            self.sub_mode_quick.configure(state=state)
+        for widget_name in ["sub_lang_menu", "sub_mode_menu", "sub_mode_quick", "sub_lang_quick"]:
+            if hasattr(self, widget_name):
+                getattr(self, widget_name).configure(state=state)
 
     def _update_tab_button_texts(self):
         try:
@@ -1046,9 +1075,16 @@ class YouTubeDownloaderApp(ctk.CTk):
         if safe_subs:
             sub_choices = ["All Available"] + sorted(safe_subs.keys())
             self.sub_lang_menu.configure(values=sub_choices)
-            self.sub_lang_var.set("All Available")
+            if hasattr(self, "sub_lang_quick"):
+                self.sub_lang_quick.configure(values=sub_choices)
+            # Default to primary native audio language (e.g. ar-orig) or All Available
+            orig_choice = next((k for k in safe_subs.keys() if "-orig" in k), "All Available")
+            self.sub_lang_var.set(orig_choice)
         else:
-            self.sub_lang_menu.configure(values=["All Available", "Hebrew", "English", "Arabic"])
+            fallback = ["All Available", "Hebrew", "English", "Arabic"]
+            self.sub_lang_menu.configure(values=fallback)
+            if hasattr(self, "sub_lang_quick"):
+                self.sub_lang_quick.configure(values=fallback)
 
         self._update_estimated_size()
 
@@ -1245,6 +1281,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             })
 
             mode = self.sub_mode_var.get()
+            is_burn = any(kw in mode for kw in ["Burn", "צריבה", "बर्न", "ถาวร"])
             is_embed = any(kw in mode for kw in ["Embed", "הטמעה", "एम्बेड", "ฝัง"])
             is_both = any(kw in mode for kw in ["Both", "שניהם", "दोनों", "ทั้งสอง"])
 
@@ -1266,14 +1303,72 @@ class YouTubeDownloaderApp(ctk.CTk):
                 try:
                     base_title = ydl.prepare_filename(info)
                     base_no_ext, _ = os.path.splitext(base_title)
-                    main_srt = base_no_ext + ".srt"
-                    if not os.path.exists(main_srt):
-                        for file_in_dir in os.listdir(out_dir):
-                            if file_in_dir.startswith(os.path.basename(base_no_ext)) and file_in_dir.endswith(".srt") and file_in_dir != os.path.basename(main_srt):
-                                shutil.copy2(os.path.join(out_dir, file_in_dir), main_srt)
+
+                    # 1. Find matching .srt file
+                    chosen_srt = None
+                    for file_in_dir in os.listdir(out_dir):
+                        full_f = os.path.join(out_dir, file_in_dir)
+                        if file_in_dir.startswith(os.path.basename(base_no_ext)) and file_in_dir.endswith(".srt"):
+                            if lang_choice != "All Available" and lang_choice in file_in_dir:
+                                chosen_srt = full_f
                                 break
-                except Exception:
-                    pass
+                            elif not chosen_srt:
+                                chosen_srt = full_f
+
+                    main_srt = base_no_ext + ".srt"
+                    if chosen_srt and not os.path.exists(main_srt):
+                        try:
+                            shutil.copy2(chosen_srt, main_srt)
+                            chosen_srt = main_srt
+                        except Exception:
+                            pass
+
+                    # 2. Burn subtitles into video if Hardsub mode is selected
+                    mode = self.sub_mode_var.get()
+                    is_burn = any(kw in mode for kw in ["Burn", "צריבה", "बर्न", "ถาวร"])
+                    if is_burn and chosen_srt and os.path.exists(chosen_srt) and self.ffmpeg_available:
+                        video_file = None
+                        for ext in [".mp4", ".mkv", ".webm"]:
+                            cand = base_no_ext + ext
+                            if os.path.exists(cand):
+                                video_file = cand
+                                break
+
+                        if video_file:
+                            self.after(0, lambda: self.progress_lbl.configure(text=f"🔥 {self.t('status_burning')}"))
+                            temp_sub_name = "_burn_temp.srt"
+                            temp_burned_name = "_burn_temp.mp4"
+                            temp_sub_path = os.path.join(out_dir, temp_sub_name)
+                            temp_burned_path = os.path.join(out_dir, temp_burned_name)
+                            try:
+                                shutil.copy2(chosen_srt, temp_sub_path)
+                                vf = f"subtitles={temp_sub_name}:force_style='FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,MarginV=30'"
+                                burn_cmd = [
+                                    "ffmpeg", "-y",
+                                    "-i", os.path.basename(video_file),
+                                    "-vf", vf,
+                                    "-c:v", "libx264",
+                                    "-crf", "18",
+                                    "-preset", "fast",
+                                    "-c:a", "copy",
+                                    temp_burned_name
+                                ]
+                                proc = subprocess.run(burn_cmd, cwd=out_dir, capture_output=True, text=True)
+                                if proc.returncode == 0 and os.path.exists(temp_burned_path) and os.path.getsize(temp_burned_path) > 1000:
+                                    target_mp4 = base_no_ext + ".mp4"
+                                    if os.path.exists(video_file) and video_file != temp_burned_path:
+                                        try: os.remove(video_file)
+                                        except Exception: pass
+                                    os.replace(temp_burned_path, target_mp4)
+                            finally:
+                                if os.path.exists(temp_sub_path):
+                                    try: os.remove(temp_sub_path)
+                                    except Exception: pass
+                                if os.path.exists(temp_burned_path):
+                                    try: os.remove(temp_burned_path)
+                                    except Exception: pass
+                except Exception as ex:
+                    print(f"Post-processing warning: {ex}")
 
             title = info.get("title", "Video") if info else "Video"
             thumb = info.get("thumbnail") if info else ""
@@ -1464,19 +1559,28 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.qual_lbl.configure(text=self.t("quality_label"))
         self.path_lbl.configure(text=self.t("save_to"))
         self.browse_btn.configure(text=self.t("browse"))
+        new_sub_modes = [
+            self.t("sub_mode_burn"),
+            self.t("sub_mode_both"),
+            self.t("sub_mode_embed"),
+            self.t("sub_mode_file"),
+        ]
         if hasattr(self, "sub_chk_quick"):
             self.sub_chk_quick.configure(text=self.t("subtitles"))
         if hasattr(self, "sub_mode_quick"):
-            self.sub_mode_quick.configure(values=[self.t("sub_mode_both"), self.t("sub_mode_embed"), self.t("sub_mode_file")])
+            self.sub_mode_quick.configure(values=new_sub_modes)
+        if hasattr(self, "sub_lang_lbl_quick"):
+            self.sub_lang_lbl_quick.configure(text=self.t("sub_lang"))
         self._update_estimated_size()
 
         # 4. Update Options Tab 2 Labels
         self.sub_chk.configure(text=self.t("subtitles"))
         self.sub_mode_lbl.configure(text=self.t("sub_mode"))
         current_mode = self.sub_mode_var.get()
-        new_values = [self.t("sub_mode_embed"), self.t("sub_mode_file"), self.t("sub_mode_both")]
-        self.sub_mode_menu.configure(values=new_values)
-        if any(kw in current_mode for kw in ["Both", "שניהם", "दोनों", "ทั้งสอง"]):
+        self.sub_mode_menu.configure(values=new_sub_modes)
+        if any(kw in current_mode for kw in ["Burn", "צריבה", "बर्न", "ถาวร"]):
+            self.sub_mode_var.set(self.t("sub_mode_burn"))
+        elif any(kw in current_mode for kw in ["Both", "שניהם", "दोनों", "ทั้งสอง"]):
             self.sub_mode_var.set(self.t("sub_mode_both"))
         elif any(kw in current_mode for kw in ["File", "קובץ", "फ़ाइल", "ไฟล์"]):
             self.sub_mode_var.set(self.t("sub_mode_file"))
