@@ -76,6 +76,9 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
                 "-b:a", "192k",
                 "-movflags", "+faststart",
             ]
+            has_subs = any(s.get("codec_type") == "subtitle" for s in streams)
+            if has_subs:
+                opts.extend(["-c:s", "mov_text"])
             self.run_ffmpeg(filepath, temp_out, opts)
             if os.path.exists(temp_out):
                 try:
@@ -114,6 +117,10 @@ TRANSLATIONS = {
         "browse": "📁 Browse",
         "subtitles": "Download Video Subtitles",
         "sub_lang": "Subtitle Language:",
+        "sub_mode": "Subtitle Mode:",
+        "sub_mode_embed": "Embed in Video",
+        "sub_mode_file": "Separate File (.srt)",
+        "sub_mode_both": "Both (Embed & File)",
         "playlist": "Download Full Playlist (if URL is playlist)",
         "filename_tpl": "Filename Format:",
         "ffmpeg_status": "FFmpeg Engine:",
@@ -166,6 +173,10 @@ TRANSLATIONS = {
         "browse": "📁 בחר",
         "subtitles": "הורד כתוביות לסרטון",
         "sub_lang": "שפת כתוביות:",
+        "sub_mode": "מצב כתוביות:",
+        "sub_mode_embed": "הטמעה בווידאו",
+        "sub_mode_file": "קובץ נפרד (.srt)",
+        "sub_mode_both": "שניהם (הטמעה + קובץ)",
         "playlist": "הורד פלייליסט מלא (אם הקישור הוא פלייליסט)",
         "filename_tpl": "תבנית שם קובץ:",
         "ffmpeg_status": "מנוע FFmpeg:",
@@ -218,6 +229,10 @@ TRANSLATIONS = {
         "browse": "📁 चुनें",
         "subtitles": "वीडियो उपशीर्षक डाउनलोड करें",
         "sub_lang": "उपशीर्षक भाषा:",
+        "sub_mode": "उपशीर्षक मोड:",
+        "sub_mode_embed": "वीडियो में एम्बेड करें",
+        "sub_mode_file": "अलग फ़ाइल (.srt)",
+        "sub_mode_both": "दोनों (एम्बेड और फ़ाइल)",
         "playlist": "पूरी प्लेलिस्ट डाउनलोड करें (यदि यूआरएल प्लेलिस्ट है)",
         "filename_tpl": "फ़ाइल नाम प्रारूप:",
         "ffmpeg_status": "FFmpeg इंजन:",
@@ -270,6 +285,10 @@ TRANSLATIONS = {
         "browse": "📁 เรียกดู",
         "subtitles": "ดาวน์โหลดคำบรรยายวิดีโอ",
         "sub_lang": "ภาษาคำบรรยาย:",
+        "sub_mode": "โหมดคำบรรยาย:",
+        "sub_mode_embed": "ฝังในวิดีโอ",
+        "sub_mode_file": "ไฟล์แยก (.srt)",
+        "sub_mode_both": "ทั้งสองแบบ",
         "playlist": "ดาวน์โหลดทั้งเพลย์ลิสต์ (หากลิงก์เป็นเพลย์ลิสต์)",
         "filename_tpl": "รูปแบบชื่อไฟล์:",
         "ffmpeg_status": "เอนจิน FFmpeg:",
@@ -337,7 +356,8 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.format_mode = ctk.StringVar(value="Video")
         self.quality_var = ctk.StringVar(value="Best")
         self.subtitle_enabled = ctk.BooleanVar(value=False)
-        self.sub_lang_var = ctk.StringVar(value="English")
+        self.sub_lang_var = ctk.StringVar(value="Hebrew" if self.current_lang == "he" else "English")
+        self.sub_mode_var = ctk.StringVar(value=self.t("sub_mode_embed"))
         self.playlist_enabled = ctk.BooleanVar(value=False)
         self.filename_tpl_var = ctk.StringVar(value="%(title)s.%(ext)s")
 
@@ -361,9 +381,31 @@ class YouTubeDownloaderApp(ctk.CTk):
         lang_dict = TRANSLATIONS.get(self.current_lang, TRANSLATIONS["en"])
         return lang_dict.get(key, TRANSLATIONS["en"].get(key, key))
 
-    @staticmethod
-    def _check_ffmpeg():
-        return shutil.which("ffmpeg") is not None
+    def _check_ffmpeg(self):
+        # 1. Direct check in PATH
+        if shutil.which("ffmpeg") is not None:
+            return True
+
+        # 2. Check local project ffmpeg directory
+        app_dir = self._get_app_dir()
+        local_ffmpeg_dir = os.path.join(app_dir, "ffmpeg")
+        if os.path.isdir(local_ffmpeg_dir):
+            direct_exe = os.path.join(local_ffmpeg_dir, "ffmpeg.exe")
+            if os.path.isfile(direct_exe):
+                os.environ["PATH"] = local_ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+                return True
+
+            for root, _, files in os.walk(local_ffmpeg_dir):
+                for f in files:
+                    if f.lower() == "ffmpeg.exe":
+                        os.environ["PATH"] = root + os.pathsep + os.environ.get("PATH", "")
+                        if not os.path.exists(direct_exe):
+                            try:
+                                shutil.copy2(os.path.join(root, f), direct_exe)
+                            except Exception:
+                                pass
+                        return True
+        return False
 
     def _get_app_dir(self):
         if getattr(sys, "frozen", False):
@@ -628,23 +670,35 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.sub_lang_menu = ctk.CTkOptionMenu(
             self.tab_adv,
             variable=self.sub_lang_var,
-            values=["English", "Hebrew", "Hindi", "Thai", "Auto-generated"],
+            values=["Hebrew", "English", "Arabic", "Russian", "Spanish", "French", "Hindi", "Thai", "All"],
             width=130,
             state="disabled"  # Disabled by default until checkbox is ticked!
         )
         self.sub_lang_menu.grid(row=0, column=1, sticky="e", pady=5, padx=(10, 0))
 
+        self.sub_mode_lbl = ctk.CTkLabel(self.tab_adv, text=self.t("sub_mode"), font=("Arial", 11, "bold"))
+        self.sub_mode_lbl.grid(row=1, column=0, sticky="w", pady=5)
+
+        self.sub_mode_menu = ctk.CTkOptionMenu(
+            self.tab_adv,
+            variable=self.sub_mode_var,
+            values=[self.t("sub_mode_embed"), self.t("sub_mode_file"), self.t("sub_mode_both")],
+            width=160,
+            state="disabled"
+        )
+        self.sub_mode_menu.grid(row=1, column=1, sticky="e", pady=5, padx=(10, 0))
+
         self.playlist_chk = ctk.CTkCheckBox(self.tab_adv, text=self.t("playlist"), variable=self.playlist_enabled)
-        self.playlist_chk.grid(row=1, column=0, columnspan=2, sticky="w", pady=5)
+        self.playlist_chk.grid(row=2, column=0, columnspan=2, sticky="w", pady=5)
 
         self.fn_lbl = ctk.CTkLabel(self.tab_adv, text=self.t("filename_tpl"), font=("Arial", 11, "bold"))
-        self.fn_lbl.grid(row=2, column=0, sticky="w", pady=5)
+        self.fn_lbl.grid(row=3, column=0, sticky="w", pady=5)
 
         self.fn_entry = ctk.CTkEntry(self.tab_adv, textvariable=self.filename_tpl_var, height=28, font=("Arial", 11))
-        self.fn_entry.grid(row=2, column=1, sticky="ew", pady=5, padx=(10, 0))
+        self.fn_entry.grid(row=3, column=1, sticky="ew", pady=5, padx=(10, 0))
 
         self.ffmpeg_lbl = ctk.CTkLabel(self.tab_adv, text="", font=("Arial", 10), wraplength=340, justify="left")
-        self.ffmpeg_lbl.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 2))
+        self.ffmpeg_lbl.grid(row=4, column=0, columnspan=2, sticky="w", pady=(8, 2))
 
         self.ffmpeg_install_btn = ctk.CTkButton(
             self.tab_adv,
@@ -753,10 +807,9 @@ class YouTubeDownloaderApp(ctk.CTk):
         self._refresh_queue_list()
 
     def _on_subtitle_toggle(self):
-        if self.subtitle_enabled.get():
-            self.sub_lang_menu.configure(state="normal")
-        else:
-            self.sub_lang_menu.configure(state="disabled")
+        state = "normal" if self.subtitle_enabled.get() else "disabled"
+        self.sub_lang_menu.configure(state=state)
+        self.sub_mode_menu.configure(state=state)
 
     def _update_tab_button_texts(self):
         try:
@@ -802,10 +855,16 @@ class YouTubeDownloaderApp(ctk.CTk):
                     best_audio = max(audio_formats, key=lambda f: f.get("abr") or 0)
                     matched_size = best_audio.get("filesize") or best_audio.get("filesize_approx")
             else:
-                # Video format matching by height
+                # Video format matching by resolution (handles both horizontal and portrait/Shorts)
                 match = re.search(r"(\d+)", quality_str)
                 target_h = int(match.group(1)) if match else 1080
-                matching_video_formats = [f for f in formats if f.get("height") == target_h]
+                def _matches_res(f):
+                    fh = f.get("height") or 0
+                    fw = f.get("width") or 0
+                    min_dim = min(fh, fw) if fh and fw else (fh or fw)
+                    return min_dim == target_h or fh == target_h or fw == target_h
+
+                matching_video_formats = [f for f in formats if _matches_res(f)]
                 if matching_video_formats:
                     best_vf = max(matching_video_formats, key=lambda f: f.get("tbr") or f.get("filesize") or 0)
                     vf_size = best_vf.get("filesize") or best_vf.get("filesize_approx")
@@ -882,7 +941,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                 ydl_opts = {
                     "quiet": True,
                     "no_warnings": True,
-                    "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+                    "extractor_args": {"youtube": {"player_client": ["web", "mweb", "android"]}},
                 }
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
@@ -952,7 +1011,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             self.ffmpeg_install_btn.grid_remove()
         else:
             self.ffmpeg_lbl.configure(text=self.t("ffmpeg_missing"), text_color="#FF9800")
-            self.ffmpeg_install_btn.grid(row=4, column=0, columnspan=2, sticky="ew", pady=5)
+            self.ffmpeg_install_btn.grid(row=5, column=0, columnspan=2, sticky="ew", pady=5)
 
     def _install_ffmpeg(self):
         self.ffmpeg_install_btn.configure(state="disabled", text="⏳ Installing...")
@@ -1052,7 +1111,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             "quiet": True,
             "no_warnings": True,
             "noplaylist": not self.playlist_enabled.get(),
-            "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+            "extractor_args": {"youtube": {"player_client": ["web", "mweb", "android"]}},
         }
 
         if fmt_selection == self.t("audio"):
@@ -1073,22 +1132,15 @@ class YouTubeDownloaderApp(ctk.CTk):
             if self.ffmpeg_available:
                 if h:
                     ydl_opts["format"] = (
-                        f"bestvideo[height<={h}][vcodec^=avc1]+bestaudio[acodec^=mp4a]/"
-                        f"bestvideo[height<={h}][vcodec^=avc1]+bestaudio[ext=m4a]/"
-                        f"bestvideo[height<={h}][vcodec^=avc1]+bestaudio/"
-                        f"bestvideo[height<={h}][ext=mp4]+bestaudio[ext=m4a]/"
                         f"bestvideo[height<={h}]+bestaudio/"
-                        f"best[height<={h}]/best"
+                        f"bestvideo[width<={h}]+bestaudio/"
+                        f"bestvideo+bestaudio/"
+                        f"best[height<={h}]/best[width<={h}]/best"
                     )
+                    ydl_opts["format_sort"] = [f"res:{h}"]
                 else:
-                    ydl_opts["format"] = (
-                        "bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/"
-                        "bestvideo[vcodec^=avc1]+bestaudio[ext=m4a]/"
-                        "bestvideo[vcodec^=avc1]+bestaudio/"
-                        "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
-                        "bestvideo+bestaudio/"
-                        "best"
-                    )
+                    ydl_opts["format"] = "bestvideo+bestaudio/best"
+                    ydl_opts["format_sort"] = ["res"]
                 ydl_opts["merge_output_format"] = "mp4"
                 ydl_opts["postprocessor_args"] = {
                     "merger": [
@@ -1097,13 +1149,45 @@ class YouTubeDownloaderApp(ctk.CTk):
                     ]
                 }
             else:
-                ydl_opts["format"] = f"best[height<={h}][vcodec^=avc1]/best[height<={h}][ext=mp4]/best[height<={h}]/best" if h else "best[vcodec^=avc1]/best[ext=mp4]/best"
+                if h:
+                    ydl_opts["format"] = f"best[height<={h}]/best[width<={h}]/best"
+                    ydl_opts["format_sort"] = [f"res:{h}"]
+                else:
+                    ydl_opts["format"] = "best"
 
-        if self.subtitle_enabled.get():
+        if self.subtitle_enabled.get() and fmt_selection != self.t("audio"):
+            lang_choice = self.sub_lang_var.get()
+            lang_map = {
+                "Hebrew": ["he", "iw", "he-IL"],
+                "English": ["en", "en-US", "en-GB"],
+                "Arabic": ["ar"],
+                "Russian": ["ru"],
+                "Spanish": ["es"],
+                "French": ["fr"],
+                "Hindi": ["hi"],
+                "Thai": ["th"],
+                "All": ["all"],
+            }
+            langs = lang_map.get(lang_choice, [lang_choice.lower()[:2]])
+
             ydl_opts.update({
                 "writesubtitles": True,
-                "subtitleslangs": [self.sub_lang_var.get().lower()[:2]],
+                "writeautomaticsub": True,
+                "subtitleslangs": langs,
+                "subtitlesformat": "srt/best",
             })
+
+            mode = self.sub_mode_var.get()
+            is_embed = any(kw in mode for kw in ["Embed", "הטמעה", "एम्बेड", "ฝัง"])
+            is_both = any(kw in mode for kw in ["Both", "שניהם", "दोनों", "ทั้งสอง"])
+
+            if self.ffmpeg_available and is_embed:
+                pps = ydl_opts.get("postprocessors", [])
+                pps.append({
+                    "key": "FFmpegEmbedSubtitle",
+                    "already_have_subtitle": is_both,
+                })
+                ydl_opts["postprocessors"] = pps
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -1305,6 +1389,16 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         # 4. Update Options Tab 2 Labels
         self.sub_chk.configure(text=self.t("subtitles"))
+        self.sub_mode_lbl.configure(text=self.t("sub_mode"))
+        current_mode = self.sub_mode_var.get()
+        new_values = [self.t("sub_mode_embed"), self.t("sub_mode_file"), self.t("sub_mode_both")]
+        self.sub_mode_menu.configure(values=new_values)
+        if any(kw in current_mode for kw in ["Both", "שניהם", "दोनों", "ทั้งสอง"]):
+            self.sub_mode_var.set(self.t("sub_mode_both"))
+        elif any(kw in current_mode for kw in ["File", "קובץ", "फ़ाइल", "ไฟล์"]):
+            self.sub_mode_var.set(self.t("sub_mode_file"))
+        else:
+            self.sub_mode_var.set(self.t("sub_mode_embed"))
         self.playlist_chk.configure(text=self.t("playlist"))
         self.fn_lbl.configure(text=self.t("filename_tpl"))
         self.ffmpeg_install_btn.configure(text=self.t("ffmpeg_install_btn"))
