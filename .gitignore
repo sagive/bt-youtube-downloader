@@ -43,6 +43,7 @@ venv.bak/
 
 # User-specific & local cache / history
 recent_downloads.json
+settings.json
 *.log
 
 # FFmpeg binary directories

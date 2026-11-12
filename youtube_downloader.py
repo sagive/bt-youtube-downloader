@@ -92,7 +92,7 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
 
 
 # Application Version
-APP_VERSION = "v1.0.5"
+APP_VERSION = "v1.0.6"
 
 # Set appearance mode and color theme
 ctk.set_appearance_mode("Dark")
@@ -108,7 +108,7 @@ TRANSLATIONS = {
         "url_placeholder": "Paste YouTube video or playlist URL here...",
         "paste": "📋 Paste",
         "load": "🔍 Load",
-        "settings": "⚙️",
+        "settings": "⚙",
         "tab_download": "Options",
         "tab_subtitles": "Subtitles",
         "tab_advanced": "Advanced",
@@ -167,6 +167,9 @@ TRANSLATIONS = {
         "theme_dark": "Dark",
         "theme_light": "Light",
         "theme_system": "System",
+        "style_label": "UI Corner Style:",
+        "style_rounded": "Rounded (Modern)",
+        "style_square": "Square / Sharp (Flat)",
     },
     "he": {
         "app_title": "YouTube Downloader",
@@ -174,7 +177,7 @@ TRANSLATIONS = {
         "url_placeholder": "הדבק קישור לסרטון או פלייליסט מ-YouTube...",
         "paste": "📋 הדבק",
         "load": "🔍 טען",
-        "settings": "⚙️",
+        "settings": "⚙",
         "tab_download": "אפשרויות",
         "tab_subtitles": "כתוביות",
         "tab_advanced": "מתקדם",
@@ -233,6 +236,9 @@ TRANSLATIONS = {
         "theme_dark": "כהה",
         "theme_light": "בהיר",
         "theme_system": "מערכת",
+        "style_label": "סגנון פינות / עיצוב:",
+        "style_rounded": "מעוגל (מודרני)",
+        "style_square": "מרובע / חד (ללא עיגול)",
     },
     "hi": {
         "app_title": "YouTube Downloader",
@@ -240,7 +246,7 @@ TRANSLATIONS = {
         "url_placeholder": "यहाँ यूट्यूब वीडियो या प्लेलिस्ट यूआरएल पेस्ट करें...",
         "paste": "📋 पेस्ट करें",
         "load": "🔍 लोड करें",
-        "settings": "⚙️",
+        "settings": "⚙",
         "tab_download": "विकल्प",
         "tab_subtitles": "उपशीर्षक",
         "tab_advanced": "उन्नत",
@@ -299,6 +305,9 @@ TRANSLATIONS = {
         "theme_dark": "डार्क",
         "theme_light": "लाइट",
         "theme_system": "सिस्टम",
+        "style_label": "यूआई शैली:",
+        "style_rounded": "गोल (आधुनिक)",
+        "style_square": "चौकोर / सपाट",
     },
     "th": {
         "app_title": "YouTube Downloader",
@@ -306,7 +315,7 @@ TRANSLATIONS = {
         "url_placeholder": "วางลิงก์วิดีโอหรือเพลย์ลิสต์ YouTube ที่นี่...",
         "paste": "📋 วาง",
         "load": "🔍 โหลด",
-        "settings": "⚙️",
+        "settings": "⚙",
         "tab_download": "ตัวเลือก",
         "tab_subtitles": "คำบรรยาย",
         "tab_advanced": "ขั้นสูง",
@@ -365,6 +374,9 @@ TRANSLATIONS = {
         "theme_dark": "มืด",
         "theme_light": "สว่าง",
         "theme_system": "ระบบ",
+        "style_label": "รูปแบบมุม UI:",
+        "style_rounded": "โค้งมน (ทันสมัย)",
+        "style_square": "สี่เหลี่ยม / คม (แบน)",
     },
 }
 
@@ -373,11 +385,18 @@ class YouTubeDownloaderApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Settings & Theme setup
+        loaded_settings = self._load_settings()
+        self.ui_style = loaded_settings.get("ui_style", "rounded")
+        self.current_theme = loaded_settings.get("theme", "Dark")
+        self.current_lang = loaded_settings.get("lang", "en")
+        ctk.set_appearance_mode(self.current_theme)
+
         # Window Setup
         self.title(f"YouTube Downloader {APP_VERSION}")
         self.geometry("960x680")
         self.minsize(900, 600)
-        self.configure(fg_color=("#F5F5F7", "#1A1A1A"))
+        self.configure(fg_color=("#ECEEF3", "#0E1015"))
 
         # Window Icon
         try:
@@ -474,6 +493,103 @@ class YouTubeDownloaderApp(ctk.CTk):
         except Exception:
             pass
 
+    def _load_settings(self):
+        settings_file = os.path.join(self._get_app_dir(), "settings.json")
+        try:
+            if os.path.exists(settings_file):
+                with open(settings_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception:
+            pass
+        return {"ui_style": "rounded", "theme": "Dark", "lang": "en"}
+
+    def _save_settings(self):
+        settings_file = os.path.join(self._get_app_dir(), "settings.json")
+        try:
+            data = {
+                "ui_style": getattr(self, "ui_style", "rounded"),
+                "theme": getattr(self, "current_theme", "Dark"),
+                "lang": getattr(self, "current_lang", "en"),
+            }
+            with open(settings_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
+    def _set_ui_style(self, style_mode):
+        self.ui_style = style_mode
+        self._apply_ui_style(style_mode)
+        self._save_settings()
+
+    def _apply_ui_style(self, style_mode):
+        self.ui_style = style_mode
+        is_sq = (style_mode == "square")
+
+        r_pill = 2 if is_sq else 19
+        r_big_btn = 3 if is_sq else 23
+        r_card = 2 if is_sq else 12
+        r_tab = 2 if is_sq else 12
+        r_sm = 2 if is_sq else 8
+        r_prog = 0 if is_sq else 6
+
+        # Header controls
+        if hasattr(self, "settings_btn"):
+            self.settings_btn.configure(corner_radius=r_pill)
+        if hasattr(self, "load_btn"):
+            self.load_btn.configure(corner_radius=r_pill)
+        if hasattr(self, "paste_btn"):
+            self.paste_btn.configure(corner_radius=r_pill)
+        if hasattr(self, "url_entry"):
+            self.url_entry.configure(corner_radius=r_pill)
+
+        # Upper cards
+        if hasattr(self, "info_card"):
+            self.info_card.configure(corner_radius=r_card)
+        if hasattr(self, "thumb_label"):
+            self.thumb_label.configure(corner_radius=r_sm)
+        if hasattr(self, "status_badge"):
+            self.status_badge.configure(corner_radius=r_sm)
+        if hasattr(self, "options_tabview"):
+            self.options_tabview.configure(corner_radius=r_tab)
+            try:
+                self.options_tabview._segmented_button.configure(corner_radius=r_sm)
+            except Exception:
+                pass
+        if hasattr(self, "fmt_seg_btn"):
+            self.fmt_seg_btn.configure(corner_radius=r_sm)
+        if hasattr(self, "quality_option_menu"):
+            self.quality_option_menu.configure(corner_radius=r_sm)
+        if hasattr(self, "browse_btn"):
+            self.browse_btn.configure(corner_radius=r_sm)
+        if hasattr(self, "sub_mode_menu"):
+            self.sub_mode_menu.configure(corner_radius=r_sm)
+        if hasattr(self, "sub_lang_menu"):
+            self.sub_lang_menu.configure(corner_radius=r_sm)
+        if hasattr(self, "sub_size_menu"):
+            self.sub_size_menu.configure(corner_radius=r_sm)
+        if hasattr(self, "sub_pos_menu"):
+            self.sub_pos_menu.configure(corner_radius=r_sm)
+        if hasattr(self, "ffmpeg_install_btn"):
+            self.ffmpeg_install_btn.configure(corner_radius=r_sm)
+
+        # Bottom Area
+        if hasattr(self, "bottom_control_frame"):
+            self.bottom_control_frame.configure(corner_radius=r_card)
+        if hasattr(self, "download_btn"):
+            self.download_btn.configure(corner_radius=r_big_btn)
+        if hasattr(self, "cancel_btn"):
+            self.cancel_btn.configure(corner_radius=r_big_btn)
+        if hasattr(self, "progress_bar"):
+            self.progress_bar.configure(corner_radius=r_prog)
+
+        # Queue Frame
+        if hasattr(self, "queue_scroll"):
+            self.queue_scroll.configure(corner_radius=r_card)
+        if hasattr(self, "clear_queue_btn"):
+            self.clear_queue_btn.configure(corner_radius=r_sm)
+
+        self._refresh_queue_list()
+
     @staticmethod
     def _format_size(bytes_val):
         for unit in ["B", "KB", "MB", "GB"]:
@@ -495,7 +611,14 @@ class YouTubeDownloaderApp(ctk.CTk):
     # -------------------------------------------------------------------
     def _build_ui(self):
         # 1. Top Header Bar
-        self.header_frame = ctk.CTkFrame(self, height=65, corner_radius=0, fg_color=("#FFFFFF", "#242424"))
+        self.header_frame = ctk.CTkFrame(
+            self,
+            height=65,
+            corner_radius=0,
+            fg_color=("#FFFFFF", "#181B24"),
+            border_width=1,
+            border_color=("#DDE1EA", "#262B3A")
+        )
         self.header_frame.pack(fill="x", side="top")
         self.header_frame.pack_propagate(False)
 
@@ -513,7 +636,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             titles_sub_frame,
             text=f"{self.t('app_title')} {APP_VERSION}",
             font=("Arial", 16, "bold"),
-            text_color=("#E50914", "#FF4444")
+            text_color=("#FF0033", "#FF0033")
         )
         self.app_title_lbl.pack(anchor="w")
 
@@ -532,12 +655,13 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.settings_btn = ctk.CTkButton(
             header_actions,
             text=self.t("settings"),
-            width=42,
+            width=38,
             height=38,
             corner_radius=19,
-            fg_color=("#EAEAEA", "#333333"),
-            hover_color=("#D5D5D5", "#444444"),
-            text_color=("#1A1A1A", "#FFFFFF"),
+            fg_color=("#E2E7F0", "#262A38"),
+            hover_color=("#D1D9E6", "#343A4E"),
+            text_color=("#0F172A", "#FFFFFF"),
+            font=("Segoe UI", 16),
             command=self._open_settings_dialog
         )
         self.settings_btn.pack(side="right", padx=(5, 0))
@@ -548,9 +672,9 @@ class YouTubeDownloaderApp(ctk.CTk):
             width=90,
             height=38,
             corner_radius=19,
-            fg_color="#FF4444",
-            hover_color="#CC0000",
-            font=("Arial", 13, "bold"),
+            fg_color="#FF0033",
+            hover_color="#CC0029",
+            font=("Segoe UI", 13, "bold"),
             command=self._fetch_video_info
         )
         self.load_btn.pack(side="right", padx=(5, 0))
@@ -561,10 +685,10 @@ class YouTubeDownloaderApp(ctk.CTk):
             width=85,
             height=38,
             corner_radius=19,
-            fg_color=("#EAEAEA", "#333333"),
-            hover_color=("#D5D5D5", "#444444"),
-            text_color=("#1A1A1A", "#FFFFFF"),
-            font=("Arial", 12),
+            fg_color=("#E2E7F0", "#262A38"),
+            hover_color=("#D1D9E6", "#343A4E"),
+            text_color=("#0F172A", "#FFFFFF"),
+            font=("Segoe UI", 12),
             command=self._paste_url
         )
         self.paste_btn.pack(side="right", padx=(5, 0))
@@ -576,7 +700,10 @@ class YouTubeDownloaderApp(ctk.CTk):
             placeholder_text=self.t("url_placeholder"),
             height=38,
             corner_radius=19,
-            font=("Arial", 13)
+            fg_color=("#F8FAFC", "#11141B"),
+            border_width=1,
+            border_color=("#CBD5E1", "#2D3345"),
+            font=("Segoe UI", 12)
         )
         self.url_entry.pack(side="left", fill="x", expand=True, padx=15, pady=13)
         self.url_entry.bind("<Return>", lambda e: self._fetch_video_info())
@@ -590,7 +717,14 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.upper_split_frame.pack(fill="x", side="top", pady=(0, 10))
 
         # 2. Video Info Card (Left side)
-        self.info_card = ctk.CTkFrame(self.upper_split_frame, height=210, corner_radius=12, fg_color=("#FFFFFF", "#242424"))
+        self.info_card = ctk.CTkFrame(
+            self.upper_split_frame,
+            height=210,
+            corner_radius=12,
+            fg_color=("#FFFFFF", "#181B24"),
+            border_width=1,
+            border_color=("#DDE1EA", "#262B3A")
+        )
         self.info_card.pack(side="left", fill="both", expand=True, padx=(0, 8))
 
         # Thumbnail Label (compact size to leave room for Options Panel)
@@ -601,7 +735,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             width=200,
             height=130,
             corner_radius=8,
-            fg_color=("#EFEFEF", "#1E1E1E")
+            fg_color=("#F1F5F9", "#11141C")
         )
         self.thumb_label.pack(side="left", padx=10, pady=10)
 
@@ -641,7 +775,17 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.status_badge.pack(anchor="w", pady=(6, 0))
 
         # 3. Options Panel (Tabview on Right side with fixed 460px width)
-        self.options_tabview = ctk.CTkTabview(self.upper_split_frame, width=460, height=210, corner_radius=12)
+        self.options_tabview = ctk.CTkTabview(
+            self.upper_split_frame,
+            width=460,
+            height=210,
+            corner_radius=12,
+            fg_color=("#FFFFFF", "#181B24"),
+            border_width=1,
+            border_color=("#DDE1EA", "#262B3A"),
+            segmented_button_selected_color="#2563EB",
+            segmented_button_selected_hover_color="#1D4ED8"
+        )
         self.options_tabview.pack(side="right", fill="both")
 
         # Fixed internal names for tabs: "tab1", "tab2", "tab3"
@@ -697,6 +841,9 @@ class YouTubeDownloaderApp(ctk.CTk):
             text=self.t("browse"),
             width=70,
             height=30,
+            fg_color=("#2563EB", "#3B82F6"),
+            hover_color=("#1D4ED8", "#2563EB"),
+            font=("Segoe UI", 11, "bold"),
             command=self._browse_folder
         )
         self.browse_btn.pack(side="right")
@@ -793,15 +940,24 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.ffmpeg_install_btn = ctk.CTkButton(
             self.tab_adv,
             text=self.t("ffmpeg_install_btn"),
-            height=26,
-            fg_color=("#3B82F6", "#2563EB"),
+            height=28,
+            corner_radius=8,
+            fg_color=("#2563EB", "#3B82F6"),
+            hover_color=("#1D4ED8", "#2563EB"),
+            font=("Segoe UI", 11, "bold"),
             command=self._install_ffmpeg
         )
 
         self.tab_adv.columnconfigure(1, weight=1)
 
         # 4. Bottom Control Area
-        self.bottom_control_frame = ctk.CTkFrame(self.main_container, corner_radius=12, fg_color=("#FFFFFF", "#242424"))
+        self.bottom_control_frame = ctk.CTkFrame(
+            self.main_container,
+            corner_radius=12,
+            fg_color=("#FFFFFF", "#181B24"),
+            border_width=1,
+            border_color=("#DDE1EA", "#262B3A")
+        )
         self.bottom_control_frame.pack(fill="x", side="top", pady=(0, 10), padx=0)
 
         btn_row = ctk.CTkFrame(self.bottom_control_frame, fg_color="transparent")
@@ -810,11 +966,11 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.download_btn = ctk.CTkButton(
             btn_row,
             text=self.t("download_btn"),
-            font=("Arial", 16, "bold"),
+            font=("Segoe UI", 15, "bold"),
             height=46,
             corner_radius=23,
-            fg_color="#FF4444",
-            hover_color="#CC0000",
+            fg_color="#FF0033",
+            hover_color="#CC0029",
             command=self._start_download
         )
         self.download_btn.pack(side="left", fill="x", expand=True, padx=(0, 10))
@@ -822,15 +978,15 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.cancel_btn = ctk.CTkButton(
             btn_row,
             text=self.t("cancel_btn"),
-            font=("Arial", 14, "bold"),
+            font=("Segoe UI", 13, "bold"),
             height=46,
             width=110,
             corner_radius=23,
             fg_color="transparent",
             border_width=2,
-            border_color=("#FF4444", "#FF4444"),
-            text_color=("#FF4444", "#FF4444"),
-            hover_color=("#FFEEEE", "#3A1A1A"),
+            border_color=("#FF0033", "#FF0033"),
+            text_color=("#FF0033", "#FF0033"),
+            hover_color=("#FFEBEF", "#3A0D14"),
             state="disabled",
             command=self._cancel_download
         )
@@ -839,7 +995,13 @@ class YouTubeDownloaderApp(ctk.CTk):
         progress_row = ctk.CTkFrame(self.bottom_control_frame, fg_color="transparent")
         progress_row.pack(fill="x", padx=15, pady=(5, 12))
 
-        self.progress_bar = ctk.CTkProgressBar(progress_row, height=12, corner_radius=6, progress_color="#FF4444")
+        self.progress_bar = ctk.CTkProgressBar(
+            progress_row,
+            height=12,
+            corner_radius=6,
+            progress_color="#FF0033",
+            fg_color=("#E2E8F0", "#282C3A")
+        )
         self.progress_bar.set(0)
         self.progress_bar.pack(fill="x", pady=(0, 6))
 
@@ -878,10 +1040,11 @@ class YouTubeDownloaderApp(ctk.CTk):
             text=self.t("clear_queue"),
             width=110,
             height=28,
-            fg_color=("#E0E0E0", "#333333"),
-            hover_color=("#D0D0D0", "#444444"),
-            text_color=("#333333", "#E0E0E0"),
-            font=("Arial", 11),
+            corner_radius=8,
+            fg_color=("#E2E7F0", "#262A38"),
+            hover_color=("#D1D9E6", "#343A4E"),
+            text_color=("#0F172A", "#F8FAFC"),
+            font=("Segoe UI", 11),
             command=self._clear_queue
         )
         self.clear_queue_btn.pack(side="right")
@@ -890,11 +1053,14 @@ class YouTubeDownloaderApp(ctk.CTk):
             self.main_container,
             height=150,
             corner_radius=12,
-            fg_color=("#FFFFFF", "#242424")
+            fg_color=("#FFFFFF", "#181B24"),
+            border_width=1,
+            border_color=("#DDE1EA", "#262B3A")
         )
         self.queue_scroll.pack(fill="both", expand=True, side="top")
 
         self._refresh_queue_list()
+        self._apply_ui_style(self.ui_style)
 
     def _on_subtitle_toggle(self):
         state = "normal" if self.subtitle_enabled.get() else "disabled"
@@ -1233,7 +1399,13 @@ class YouTubeDownloaderApp(ctk.CTk):
                 dl_str = self._format_size(downloaded)
                 tot_str = self._format_size(total)
                 spd_str = self._format_speed(speed) if speed else "-- KB/s"
-                eta_str = f"{eta}s" if eta else "--"
+                if eta:
+                    try:
+                        eta_str = f"{float(eta):.1f}s"
+                    except Exception:
+                        eta_str = f"{eta}s"
+                else:
+                    eta_str = "--"
 
                 self.after(0, lambda: self._update_progress_ui(percent, f"⬇️ {dl_str} / {tot_str}", f"⚡ {spd_str} | ⏱️ ETA: {eta_str}"))
 
@@ -1493,8 +1665,19 @@ class YouTubeDownloaderApp(ctk.CTk):
             no_downloads_lbl.pack(pady=20)
             return
 
+        is_sq = getattr(self, "ui_style", "rounded") == "square"
+        card_r = 2 if is_sq else 8
+        btn_r = 2 if is_sq else 14
+
         for item in self.recent_downloads[:10]:
-            card = ctk.CTkFrame(self.queue_scroll, height=45, corner_radius=8, fg_color=("#F5F5F5", "#1E1E1E"))
+            card = ctk.CTkFrame(
+                self.queue_scroll,
+                height=45,
+                corner_radius=card_r,
+                fg_color=("#F8FAFC", "#12151D"),
+                border_width=1,
+                border_color=("#E2E8F0", "#222736")
+            )
             card.pack(fill="x", pady=3, padx=2)
 
             play_btn = ctk.CTkButton(
@@ -1502,10 +1685,10 @@ class YouTubeDownloaderApp(ctk.CTk):
                 text=self.t("open_youtube"),
                 width=65,
                 height=28,
-                corner_radius=14,
-                fg_color="#FF4444",
-                hover_color="#CC0000",
-                font=("Arial", 10, "bold"),
+                corner_radius=btn_r,
+                fg_color="#FF0033",
+                hover_color="#CC0029",
+                font=("Segoe UI", 10, "bold"),
                 command=lambda u=item["url"]: webbrowser.open(u)
             )
             play_btn.pack(side="left", padx=8, pady=8)
@@ -1513,7 +1696,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             title_lbl = ctk.CTkLabel(
                 card,
                 text=item.get("title", "Download"),
-                font=("Arial", 11, "bold"),
+                font=("Segoe UI", 11, "bold"),
                 anchor="w"
             )
             title_lbl.pack(side="left", fill="x", expand=True, padx=5)
@@ -1523,11 +1706,11 @@ class YouTubeDownloaderApp(ctk.CTk):
                 text=self.t("open_folder"),
                 width=90,
                 height=28,
-                corner_radius=14,
-                fg_color=("#E0E0E0", "#333333"),
-                hover_color=("#D0D0D0", "#444444"),
-                text_color=("#333333", "#E0E0E0"),
-                font=("Arial", 10),
+                corner_radius=btn_r,
+                fg_color=("#E2E7F0", "#262A38"),
+                hover_color=("#D1D9E6", "#343A4E"),
+                text_color=("#0F172A", "#F8FAFC"),
+                font=("Segoe UI", 10),
                 command=lambda p=item.get("path", self.download_path.get()): os.startfile(p) if os.path.exists(p) else None
             )
             open_dir_btn.pack(side="right", padx=8, pady=8)
@@ -1538,24 +1721,25 @@ class YouTubeDownloaderApp(ctk.CTk):
         self._refresh_queue_list()
 
     # -------------------------------------------------------------------
-    #  Settings Dialog Window (Multi-language selector)
+    #  Settings Dialog Window (Multi-language & Design selector)
     # -------------------------------------------------------------------
     def _open_settings_dialog(self):
         dlg = ctk.CTkToplevel(self)
         dlg.title(f"{self.t('settings_title')} - {APP_VERSION}")
-        dlg.geometry("380x360")
+        dlg.geometry("380x430")
         dlg.resizable(False, False)
         dlg.transient(self)
         dlg.grab_set()
 
-        title_lbl = ctk.CTkLabel(dlg, text=self.t("settings_title"), font=("Arial", 16, "bold"))
-        title_lbl.pack(pady=(15, 5))
+        title_lbl = ctk.CTkLabel(dlg, text=self.t("settings_title"), font=("Segoe UI", 16, "bold"))
+        title_lbl.pack(pady=(15, 3))
 
-        ver_lbl = ctk.CTkLabel(dlg, text=f"BT YouTube Downloader {APP_VERSION}", font=("Arial", 11), text_color=("#888888", "#777777"))
+        ver_lbl = ctk.CTkLabel(dlg, text=f"BT YouTube Downloader {APP_VERSION}", font=("Segoe UI", 11), text_color=("#888888", "#777777"))
         ver_lbl.pack(pady=(0, 10))
 
-        lang_lbl = ctk.CTkLabel(dlg, text=self.t("language_label"), font=("Arial", 12, "bold"))
-        lang_lbl.pack(anchor="w", padx=25, pady=(5, 2))
+        # 1. Language Selection
+        lang_lbl = ctk.CTkLabel(dlg, text=self.t("language_label"), font=("Segoe UI", 12, "bold"))
+        lang_lbl.pack(anchor="w", padx=25, pady=(4, 2))
 
         lang_map = {
             "English": "en",
@@ -1576,10 +1760,11 @@ class YouTubeDownloaderApp(ctk.CTk):
             command=lambda choice: self._change_language(lang_map[choice])
         )
         lang_menu.set(curr_display)
-        lang_menu.pack(padx=25, pady=(0, 15))
+        lang_menu.pack(padx=25, pady=(0, 12))
 
-        theme_lbl = ctk.CTkLabel(dlg, text=self.t("theme_label"), font=("Arial", 12, "bold"))
-        theme_lbl.pack(anchor="w", padx=25, pady=(5, 2))
+        # 2. Theme Mode Selection
+        theme_lbl = ctk.CTkLabel(dlg, text=self.t("theme_label"), font=("Segoe UI", 12, "bold"))
+        theme_lbl.pack(anchor="w", padx=25, pady=(4, 2))
 
         theme_menu = ctk.CTkOptionMenu(
             dlg,
@@ -1587,21 +1772,53 @@ class YouTubeDownloaderApp(ctk.CTk):
             width=260,
             command=self._change_theme
         )
-        theme_menu.set(self.t("theme_dark"))
-        theme_menu.pack(padx=25, pady=(0, 20))
+        curr_theme = getattr(self, "current_theme", "Dark")
+        theme_display_map = {
+            "Dark": self.t("theme_dark"),
+            "Light": self.t("theme_light"),
+            "System": self.t("theme_system"),
+        }
+        theme_menu.set(theme_display_map.get(curr_theme, self.t("theme_dark")))
+        theme_menu.pack(padx=25, pady=(0, 12))
+
+        # 3. Corner / UI Style Selection (Rounded vs Square)
+        style_lbl = ctk.CTkLabel(dlg, text=self.t("style_label"), font=("Segoe UI", 12, "bold"))
+        style_lbl.pack(anchor="w", padx=25, pady=(4, 2))
+
+        style_display_map = {
+            "rounded": self.t("style_rounded"),
+            "square": self.t("style_square"),
+        }
+        style_reverse_map = {
+            self.t("style_rounded"): "rounded",
+            self.t("style_square"): "square",
+        }
+
+        style_menu = ctk.CTkOptionMenu(
+            dlg,
+            values=[self.t("style_rounded"), self.t("style_square")],
+            width=260,
+            command=lambda choice: self._set_ui_style(style_reverse_map.get(choice, "rounded"))
+        )
+        curr_style = getattr(self, "ui_style", "rounded")
+        style_menu.set(style_display_map.get(curr_style, self.t("style_rounded")))
+        style_menu.pack(padx=25, pady=(0, 18))
 
         close_btn = ctk.CTkButton(
             dlg,
             text="Close / סגור",
             width=140,
             height=34,
-            corner_radius=17,
+            corner_radius=17 if getattr(self, "ui_style", "rounded") == "rounded" else 2,
+            fg_color="#FF0033",
+            hover_color="#CC0029",
             command=dlg.destroy
         )
         close_btn.pack(pady=10)
 
     def _change_language(self, lang_code):
         self.current_lang = lang_code
+        self._save_settings()
         self.title(f"{self.t('app_title')} {APP_VERSION}")
 
         # 1. Update Header
@@ -1688,11 +1905,13 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def _change_theme(self, choice):
         if choice in ["Dark", "כהה", "डार्क", "มืด"]:
-            ctk.set_appearance_mode("Dark")
+            self.current_theme = "Dark"
         elif choice in ["Light", "בהיר", "लाइट", "สว่าง"]:
-            ctk.set_appearance_mode("Light")
+            self.current_theme = "Light"
         else:
-            ctk.set_appearance_mode("System")
+            self.current_theme = "System"
+        ctk.set_appearance_mode(self.current_theme)
+        self._save_settings()
 
 
 # -------------------------------------------------------------------
