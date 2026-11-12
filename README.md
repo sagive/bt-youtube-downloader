@@ -9,7 +9,7 @@
 ![Engine](https://img.shields.io/badge/Engine-yt--dlp-red?style=for-the-badge&logo=youtube)
 ![FFmpeg](https://img.shields.io/badge/Encoder-FFmpeg-green?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)
-![Version](https://img.shields.io/badge/Release-v1.0.0-orange?style=for-the-badge)
+[![Release](https://img.shields.io/badge/Release-v1.0.6-orange?style=for-the-badge)](https://github.com/sagive/bt-youtube-downloader/releases/latest)
 [![Download from SourceForge](https://img.shields.io/badge/Download-SourceForge-orange?style=for-the-badge&logo=sourceforge)](https://sourceforge.net/projects/bt-youtube-downloader/files/latest/download)
 [![Available on itch.io](https://img.shields.io/badge/Available_on-itch.io-fa5c5c?style=for-the-badge&logo=itch.io)](https://sagive.itch.io/bt-youtube-downloader)
 
