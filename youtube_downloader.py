@@ -92,8 +92,7 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
 
 
 # Application Version
-# Application Version
-APP_VERSION = "v1.0.4"
+APP_VERSION = "v1.0.5"
 
 # Set appearance mode and color theme
 ctk.set_appearance_mode("Dark")
@@ -1035,7 +1034,6 @@ class YouTubeDownloaderApp(ctk.CTk):
                 ydl_opts = {
                     "quiet": True,
                     "no_warnings": True,
-                    "extractor_args": {"youtube": {"player_client": ["web", "mweb", "android"]}},
                 }
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
@@ -1098,6 +1096,8 @@ class YouTubeDownloaderApp(ctk.CTk):
             elif r >= 360:
                 res_values.append(f"{r}p")
             elif r >= 240:
+                res_values.append(f"{r}p")
+            else:
                 res_values.append(f"{r}p")
         if len(res_values) > 1:
             self.quality_option_menu.configure(values=res_values)
@@ -1257,7 +1257,6 @@ class YouTubeDownloaderApp(ctk.CTk):
             "quiet": True,
             "no_warnings": True,
             "noplaylist": not self.playlist_enabled.get(),
-            "extractor_args": {"youtube": {"player_client": ["web", "mweb", "android"]}},
         }
 
         if fmt_selection == self.t("audio"):
