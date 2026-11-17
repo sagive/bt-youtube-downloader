@@ -92,7 +92,7 @@ class TwitterCompatibilityPP(FFmpegPostProcessor):
 
 
 # Application Version
-APP_VERSION = "v1.0.6"
+APP_VERSION = "v1.0.7"
 
 # Set appearance mode and color theme
 ctk.set_appearance_mode("Dark")
@@ -1449,9 +1449,9 @@ class YouTubeDownloaderApp(ctk.CTk):
             if self.ffmpeg_available:
                 ydl_opts["format"] = "bestvideo+bestaudio/best"
                 if h:
-                    ydl_opts["format_sort"] = [f"res:{h}", "ext:mp4:m4a"]
+                    ydl_opts["format_sort"] = [f"res:{h}", "vcodec:h264", "ext:mp4:m4a"]
                 else:
-                    ydl_opts["format_sort"] = ["res", "ext:mp4:m4a"]
+                    ydl_opts["format_sort"] = ["res", "vcodec:h264", "ext:mp4:m4a"]
                 ydl_opts["merge_output_format"] = "mp4"
                 ydl_opts["postprocessor_args"] = {
                     "merger": [
@@ -1503,6 +1503,8 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                if fmt_selection != self.t("audio") and self.ffmpeg_available:
+                    ydl.add_post_processor(TwitterCompatibilityPP(ydl))
                 self.active_ydl = ydl
                 info = ydl.extract_info(url, download=True)
 
